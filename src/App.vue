@@ -14,6 +14,10 @@
                 <md-input class="md-layout-item" v-model="amount"></md-input>
             </md-field>
 
+            <div v-for="username in availableUsernames" :key="username">
+                {{ username }}
+            </div>
+
             <md-button class="md-raised md-primary" @click="saveLog">Save</md-button>
         </md-dialog>
 
@@ -26,9 +30,7 @@
 </template>
 
 <script>
-
-const logs = this.$gun.get('logs')
-const username = 'matevz'
+const USERNAME = 'zan'
 
 export default {
     name: 'App',
@@ -37,27 +39,39 @@ export default {
             showDialog: false,
             name: null,
             amount: null,
-            logs: []
+            logs: [],
+            availableUsernames: [],
         }
     },
     methods: {
         saveLog () {
-            const newLog = logs.get(Date.now().toString())
+            const newLog = this.logsGun.get(Date.now().toString())
             newLog.put({
                 name: this.name,
                 amount: this.amount
             })
-            logs.set(newLog);
+            this.logsGun.set(newLog);
             this.name = null
             this.amount = null
             this.showDialog = false
         },
         logsUpdated (log) {
-            this.logs.push(log)
+            this.logsGun.push(log)
+        },
+        onNewUser (user) {
+            if (!this.availableUsernames.includes(user.username)) {
+                this.availableUsernames.push(user.username)
+            }
         }
     },
     created () {
-        logs.map().on(this.logsUpdated.bind(this));
+        this.logsGun = this.$gun.get('logs')
+        this.usersGun = this.$gun.get('users')
+
+        this.usersGun.set({ username: USERNAME })
+    
+        this.logsGun.map().on(this.logsUpdated.bind(this))
+        this.usersGun.map().on(this.onNewUser.bind(this))
     }
 }
 </script>
