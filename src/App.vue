@@ -24,14 +24,15 @@
         </md-tabs>
 
         <div v-if="activeTab === 'logs'" class="container">
+            ${{ balanceByUsername[username] }}
             <md-list class="md-triple-line">
-                <div v-for="n in 3" :key="n">
+                <div v-for="(log, index) in logs" :key="index">
                     <md-list-item >
-                        <md-avatar class="md-avatar-icon">M</md-avatar>
+                        <md-avatar class="md-avatar-icon">{{ log.name[0].toUpperCase() }}</md-avatar>
                         <div class="md-list-item-text">
-                            <span>Matevz</span>
-                            <span>40</span>
-                            <p>Matevz, Zan</p>
+                            <span>{{ log.name }}</span>
+                            <span>{{ log.amount }}</span>
+                            <p>{{ log.involved.join(', ') }}</p>
                         </div>
                     </md-list-item>
                     <md-divider class="md-inset"></md-divider>
@@ -55,7 +56,7 @@
 </template>
 
 <script>
-const USERNAME = 'matevz'
+const USERNAME = process.env.USERNAME || 'zan'
 
 
 export default {
@@ -74,6 +75,24 @@ export default {
             ]
         }
     },
+    computed: {
+        balanceByUsername () {
+            let byUsername = {}
+            this.allUsers.forEach(user => {
+                let res = 0
+                this.logs.forEach(log => {
+                    if (log.name === user.name) {
+                        res += log.amount
+                    }
+                    if (log.involved.includes(user.name)) {
+                        res -= log.amount / log.involved.length
+                    }
+                })
+                byUsername[user.name] = res
+            })
+            return byUsername
+        },
+    },
     methods: {
         openDialog () {
             this.showDialog = true
@@ -82,30 +101,28 @@ export default {
             const involvedUsernames = this.allUsers.filter(u => u.isInvolved).map(u => u.name)
             if (!involvedUsernames.length || !this.amount.length) return
 
-            const newLog = this.logsGun.get(Date.now().toString())
-            newLog.put({
+            this.logsGun.get(Date.now().toString()).put({
                 name: USERNAME,
-                amount: this.amount,
+                amount: parseInt(this.amount),
                 involved: involvedUsernames.join(',')
             })
-
-            this.allUsers.filter(u => u.isInvolved).forEach(u => {
-                // this.balanceGun.get(u.name)
-                // this.balanceGun.get(u.name).set({ amount: parseInt(this.amount) / involvedUsernames.length })
-            })
-
-            this.balanceGun.get(USERNAME).set({ })
 
             this.name = null
             this.amount = null
             this.showDialog = false
             this.allUsers.forEach(u => u.isInvolved = false)
         },
-        logsUpdated (log) {
-            this.logs.push(log)
+        onNewLog (log) {
+            if (log.name && (typeof log.amount === 'number') && !isNaN(log.amount) && log.involved) {
+                this.logs.splice(0, 0, {
+                    name: log.name,
+                    amount: log.amount,
+                    involved: log.involved.split(',')
+                })
+            }
         },
         onNewUser (user) {
-            if (!this.allUsers.some(u => u.name === user.username)) {
+            if (user.username.length > 0 && !this.allUsers.some(u => u.name === user.username)) {
                 this.allUsers.push({ name: user.username, isInvolved: false })
             }
         },
@@ -114,16 +131,15 @@ export default {
         }
     },
     created () {
-        this.username = process.env.USERNAME
+        this.username = USERNAME
 
         this.logsGun = this.$gun.get('logs')
         this.usersGun = this.$gun.get('users')
-        this.balanceGun = this.$gun.get('balance')
 
         this.allUsers.push({ name: this.username })
         this.usersGun.set({ username: this.username })
     
-        this.logsGun.map().on(this.logsUpdated.bind(this))
+        this.logsGun.map().on(this.onNewLog.bind(this))
         this.usersGun.map().on(this.onNewUser.bind(this))
     }
 }
