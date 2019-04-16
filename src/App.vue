@@ -93,7 +93,7 @@ export default {
         this.usersGun = this.$gun.get('users')
         this.balanceGun = this.$gun.get('balance')
 
-        this.allUsers.push(this.username)
+        this.allUsers.push({ name: this.username })
         this.usersGun.set({ username: this.username })
     
         this.logsGun.map().on(this.logsUpdated.bind(this))
