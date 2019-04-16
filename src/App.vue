@@ -150,9 +150,9 @@ export default {
 }
 
 .add {
-    position: absolute;
-    right: 100px;
-    bottom: 100px;
+    position: fixed;
+    right: 50px;
+    bottom: 40px;
 }
 
 .dialog {
