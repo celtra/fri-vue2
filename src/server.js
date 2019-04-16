@@ -10,4 +10,4 @@ var server = http.createServer((req,res) => {
     }
 }).listen(process.env.PORT || 5001);
 
-var gun = Gun({ file: 'db/data3.json', web: server, radisk: false, localStorage: true });
+var gun = Gun({ file: 'db/data4.json', web: server, radisk: false, localStorage: true });
