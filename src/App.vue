@@ -1,15 +1,15 @@
 <template>
     <div id="app">
-        <md-dialog class="dialog" :md-active.sync="showDialog">
+        <md-dialog class="dialog" :md-active.sync="isDialogShown">
             <md-field>
                 <label>Amount</label>
                 <span class="md-prefix">$</span>
                 <md-input class="md-layout-item" type="number" v-model="amount"></md-input>
             </md-field>
 
-            <md-checkbox v-for="user in allUsers" :key="user.name" v-model="user.isInvolved">{{ user.name }}</md-checkbox>
+            <md-checkbox v-for="user in allUsers" :key="user.username" v-model="user.isInvolved">{{ user.username }}</md-checkbox>
 
-            <md-button class="md-raised md-primary" @click="saveLog">Save</md-button>
+            <md-button class="md-raised md-primary" @click="saveBill">Save</md-button>
         </md-dialog>
 
         <div class="add">
@@ -19,23 +19,23 @@
         </div>
 
         <md-tabs @md-changed="changeTab">
-            <md-tab id="logs" md-label="Logs"></md-tab>
+            <md-tab id="bills" md-label="Bills"></md-tab>
             <md-tab id="balance" md-label="Balance"></md-tab>
         </md-tabs>
 
-        <div v-if="activeTab === 'logs'" class="container">
-            ${{ balanceByUsername[username] }}
+        <div v-if="activeTab === 'bills'" class="container">
+            <md-toolbar>Your balance: {{ Math.round(balanceByUsername[username]) }}$</md-toolbar>
             <md-list class="md-triple-line">
-                <div v-for="(log, index) in logs" :key="index">
-                    <md-list-item >
-                        <md-avatar class="md-avatar-icon">{{ log.name[0].toUpperCase() }}</md-avatar>
+                <div v-for="(bill, index) in bills" :key="index">
+                    <md-list-item>
+                        <md-avatar class="md-avatar-icon">{{ bill.username[0].toUpperCase() }}</md-avatar>
                         <div class="md-list-item-text">
-                            <span>{{ log.name }}</span>
-                            <span>{{ log.amount }}</span>
-                            <p>{{ log.involved.join(', ') }}</p>
+                            <span>{{ bill.username }}</span>
+                            <span>{{ bill.involved.length }} × {{ Math.round(bill.amount / bill.involved.length) }}$</span>
+                            <p>{{ bill.involved.join(', ') }}</p>
                         </div>
                     </md-list-item>
-                    <md-divider class="md-inset"></md-divider>
+                    <md-divider v-if="index < bills.length - 1" class="md-inset"></md-divider>
                 </div>
             </md-list>
         </div>
@@ -47,8 +47,8 @@
                 </md-table-toolbar>
 
                 <md-table-row slot="md-table-row" slot-scope="{ item }">
-                    <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }}</md-table-cell>
-                    <md-table-cell md-label="Balance" md-sort-by="balance">{{ balanceByUsername[item.name] }}$</md-table-cell>
+                    <md-table-cell md-label="Name" md-sort-by="name">{{ item.username }}</md-table-cell>
+                    <md-table-cell md-label="Balance" md-sort-by="balance">{{ Math.round(balanceByUsername[item.username]) }}$</md-table-cell>
                 </md-table-row>
             </md-table>
         </div>
@@ -58,21 +58,14 @@
 <script>
 const USERNAME = process.env.USERNAME || 'zan'
 
-
 export default {
-    name: 'App',
     data () {
         return {
-            activeTab: 'logs',
-            showDialog: false,
+            activeTab: 'bills',
+            isDialogShown: false,
             amount: null,
-            logs: [],
+            bills: [],
             allUsers: [],
-            users: [
-                { name: 'a', balance: 40 },
-                { name: 'a', balance: 40 },
-                { name: 'a', balance: 40 },
-            ]
         }
     },
     computed: {
@@ -80,50 +73,49 @@ export default {
             let byUsername = {}
             this.allUsers.forEach(user => {
                 let res = 0
-                this.logs.forEach(log => {
-                    if (log.name === user.name) {
-                        res += log.amount
+                this.bills.forEach(bill => {
+                    if (bill.username === user.username) {
+                        res += bill.amount
                     }
-                    if (log.involved.includes(user.name)) {
-                        res -= log.amount / log.involved.length
+                    if (bill.involved.includes(user.username)) {
+                        res -= bill.amount / bill.involved.length
                     }
                 })
-                byUsername[user.name] = res
+                byUsername[user.username] = res
             })
             return byUsername
         },
     },
     methods: {
         openDialog () {
-            this.showDialog = true
+            this.isDialogShown = true
         },
-        saveLog () {
-            const involvedUsernames = this.allUsers.filter(u => u.isInvolved).map(u => u.name)
+        saveBill () {
+            const involvedUsernames = this.allUsers.filter(u => u.isInvolved).map(u => u.username)
             if (!involvedUsernames.length || !this.amount.length) return
 
-            this.logsGun.get(Date.now().toString()).put({
-                name: USERNAME,
+            this.billsGun.get(Date.now().toString()).put({
+                username: USERNAME,
                 amount: parseInt(this.amount),
                 involved: involvedUsernames.join(',')
             })
 
-            this.name = null
             this.amount = null
-            this.showDialog = false
+            this.isDialogShown = false
             this.allUsers.forEach(u => u.isInvolved = false)
         },
-        onNewLog (log) {
-            if (log.name && (typeof log.amount === 'number') && !isNaN(log.amount) && log.involved) {
-                this.logs.splice(0, 0, {
-                    name: log.name,
-                    amount: log.amount,
-                    involved: log.involved.split(',')
+        onNewBill (bill) {
+            if (bill.username && (typeof bill.amount === 'number') && !isNaN(bill.amount) && bill.involved) {
+                this.bills.splice(0, 0, {
+                    username: bill.username,
+                    amount: bill.amount,
+                    involved: bill.involved.split(',')
                 })
             }
         },
         onNewUser (user) {
-            if (user.username.length > 0 && !this.allUsers.some(u => u.name === user.username)) {
-                this.allUsers.push({ name: user.username, isInvolved: false })
+            if (user.username.length > 0 && !this.allUsers.some(u => u.username === user.username)) {
+                this.allUsers.push({ username: user.username, isInvolved: false })
             }
         },
         changeTab (tab) {
@@ -132,14 +124,14 @@ export default {
     },
     created () {
         this.username = USERNAME
-        this.allUsers.push({ name: this.username })
+        this.allUsers.push({ username: this.username })
 
         this.usersGun = this.$gun.get('users')
         this.usersGun.set({ username: this.username })
         this.usersGun.map().on(this.onNewUser.bind(this))
     
-        this.logsGun = this.$gun.get('logs')
-        this.logsGun.map().on(this.onNewLog.bind(this))
+        this.billsGun = this.$gun.get('bills')
+        this.billsGun.map().on(this.onNewBill.bind(this))
     }
 }
 </script>
