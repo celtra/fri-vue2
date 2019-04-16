@@ -6,7 +6,7 @@ import 'vue-material/dist/theme/default-dark.css'
 import Gun from 'gun'
 
 Vue.use(VueMaterial)
-Vue.prototype.$gun = new Gun(['localhost:6000'])
+Vue.prototype.$gun = new Gun(['https://split-smart2.herokuapp.com/gun'])
 Vue.config.productionTip = false
 
 new Vue({
