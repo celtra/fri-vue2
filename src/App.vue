@@ -56,8 +56,7 @@
 </template>
 
 <script>
-const USERNAME = process.env.USERNAME || 'zan'
-
+const USERNAME = 'matevz'
 
 export default {
     name: 'App',
@@ -158,9 +157,9 @@ export default {
 }
 
 .add {
-    position: absolute;
-    right: 100px;
-    bottom: 100px;
+    position: fixed;
+    right: 50px;
+    bottom: 40px;
 }
 
 .dialog {
