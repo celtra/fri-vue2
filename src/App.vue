@@ -41,14 +41,14 @@
         </div>
 
         <div v-if="activeTab === 'balance'" class="container">
-            <md-table v-model="users" md-card>
+            <md-table v-model="allUsers" md-card>
                 <md-table-toolbar>
                     <h1 class="md-title">Users</h1>
                 </md-table-toolbar>
 
                 <md-table-row slot="md-table-row" slot-scope="{ item }">
                     <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }}</md-table-cell>
-                    <md-table-cell md-label="Balance" md-sort-by="balance">{{ item.balance }}$</md-table-cell>
+                    <md-table-cell md-label="Balance" md-sort-by="balance">{{ balanceByUsername[item.name] }}$</md-table-cell>
                 </md-table-row>
             </md-table>
         </div>
@@ -67,7 +67,7 @@ export default {
             showDialog: false,
             amount: null,
             logs: [],
-            availableUsernames: [],
+            allUsers: [],
             users: [
                 { name: 'a', balance: 40 },
                 { name: 'a', balance: 40 },
@@ -132,15 +132,14 @@ export default {
     },
     created () {
         this.username = USERNAME
-
-        this.logsGun = this.$gun.get('logs')
-        this.usersGun = this.$gun.get('users')
-
         this.allUsers.push({ name: this.username })
+
+        this.usersGun = this.$gun.get('users')
         this.usersGun.set({ username: this.username })
-    
-        this.logsGun.map().on(this.onNewLog.bind(this))
         this.usersGun.map().on(this.onNewUser.bind(this))
+    
+        this.logsGun = this.$gun.get('logs')
+        this.logsGun.map().on(this.onNewLog.bind(this))
     }
 }
 </script>
