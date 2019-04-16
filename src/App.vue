@@ -56,7 +56,7 @@ export default {
             this.showDialog = false
         },
         logsUpdated (log) {
-            this.logsGun.push(log)
+            this.logs.push(log)
         },
         onNewUser (user) {
             if (!this.availableUsernames.includes(user.username)) {
