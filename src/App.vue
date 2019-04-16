@@ -56,7 +56,7 @@
 </template>
 
 <script>
-const USERNAME = process.env.USERNAME || 'zan'
+const USERNAME = 'zan'
 
 export default {
     data () {
