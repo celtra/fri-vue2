@@ -7,7 +7,7 @@
                 <md-input class="md-layout-item" type="number" v-model="amount"></md-input>
             </md-field>
 
-            <md-checkbox v-for="user in availableUsernames" :key="user.name" v-model="user.isInvolved">{{ user.name }}</md-checkbox>
+            <md-checkbox v-for="user in allUsers" :key="user.name" v-model="user.isInvolved">{{ user.name }}</md-checkbox>
 
             <md-button class="md-raised md-primary" @click="saveLog">Save</md-button>
         </md-dialog>
@@ -79,7 +79,7 @@ export default {
             this.showDialog = true
         },
         saveLog () {
-            const involvedUsernames = this.availableUsernames.filter(u => u.isInvolved).map(u => u.name)
+            const involvedUsernames = this.allUsers.filter(u => u.isInvolved).map(u => u.name)
             if (!involvedUsernames.length || !this.amount.length) return
 
             const newLog = this.logsGun.get(Date.now().toString())
@@ -89,7 +89,7 @@ export default {
                 involved: involvedUsernames.join(',')
             })
 
-            this.availableUsernames.filter(u => u.isInvolved).forEach(u => {
+            this.allUsers.filter(u => u.isInvolved).forEach(u => {
                 // this.balanceGun.get(u.name)
                 // this.balanceGun.get(u.name).set({ amount: parseInt(this.amount) / involvedUsernames.length })
             })
@@ -99,14 +99,14 @@ export default {
             this.name = null
             this.amount = null
             this.showDialog = false
-            this.availableUsernames.forEach(u => u.isInvolved = false)
+            this.allUsers.forEach(u => u.isInvolved = false)
         },
         logsUpdated (log) {
             this.logs.push(log)
         },
         onNewUser (user) {
-            if (!this.availableUsernames.some(u => u.name === user.username)) {
-                this.availableUsernames.push({ name: user.username, isInvolved: false })
+            if (!this.allUsers.some(u => u.name === user.username)) {
+                this.allUsers.push({ name: user.username, isInvolved: false })
             }
         },
         changeTab (tab) {
@@ -114,11 +114,14 @@ export default {
         }
     },
     created () {
+        this.username = process.env.USERNAME
+
         this.logsGun = this.$gun.get('logs')
         this.usersGun = this.$gun.get('users')
         this.balanceGun = this.$gun.get('balance')
 
-        this.usersGun.set({ username: USERNAME })
+        this.allUsers.push({ name: this.username })
+        this.usersGun.set({ username: this.username })
     
         this.logsGun.map().on(this.logsUpdated.bind(this))
         this.usersGun.map().on(this.onNewUser.bind(this))
