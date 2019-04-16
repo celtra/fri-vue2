@@ -18,7 +18,12 @@
             </md-button>
         </div>
 
-        <div class="container">
+        <md-tabs @md-changed="changeTab">
+            <md-tab id="logs" md-label="Logs"></md-tab>
+            <md-tab id="balance" md-label="Balance"></md-tab>
+        </md-tabs>
+
+        <div v-if="activeTab === 'logs'" class="container">
             <md-list class="md-triple-line">
                 <div v-for="n in 3" :key="n">
                     <md-list-item >
@@ -33,6 +38,19 @@
                 </div>
             </md-list>
         </div>
+
+        <div v-if="activeTab === 'balance'" class="container">
+            <md-table v-model="users" md-card>
+                <md-table-toolbar>
+                    <h1 class="md-title">Users</h1>
+                </md-table-toolbar>
+
+                <md-table-row slot="md-table-row" slot-scope="{ item }">
+                    <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }}</md-table-cell>
+                    <md-table-cell md-label="Balance" md-sort-by="balance">{{ item.balance }}$</md-table-cell>
+                </md-table-row>
+            </md-table>
+        </div>
     </div>
 </template>
 
@@ -44,10 +62,16 @@ export default {
     name: 'App',
     data () {
         return {
+            activeTab: 'logs',
             showDialog: false,
             amount: null,
             logs: [],
             availableUsernames: [],
+            users: [
+                { name: 'a', balance: 40 },
+                { name: 'a', balance: 40 },
+                { name: 'a', balance: 40 },
+            ]
         }
     },
     methods: {
@@ -84,6 +108,9 @@ export default {
             if (!this.availableUsernames.some(u => u.name === user.username)) {
                 this.availableUsernames.push({ name: user.username, isInvolved: false })
             }
+        },
+        changeTab (tab) {
+            this.activeTab = tab
         }
     },
     created () {
