@@ -6,7 +6,7 @@ import 'vue-material/dist/theme/default-dark.css'
 import Gun from 'gun'
 
 Vue.use(VueMaterial)
-Vue.prototype.$gun = new Gun()
+Vue.prototype.$gun = new Gun(['localhost:8765'])
 Vue.config.productionTip = false
 
 new Vue({
